@@ -1,0 +1,50 @@
+from gensim import corpora,similarities,models
+import jieba
+import pandas as pd
+
+#加载停用词
+stopwords = [line.strip() for line in open('HIT_stopwords.txt', 'r',encoding='utf-8').readlines()]
+
+#读取数据集
+str=pd.read_csv("valid_data_QA.csv")
+questions=str['问题标题']
+
+#文本预处理函数
+def chinese_word_cut(mytext):
+    seg_list = []
+    seg_text = jieba.cut(mytext)
+    for word in seg_text:
+        if word not in stopwords:
+            seg_list.append(word)
+    return seg_list
+
+str['问题标题'] = questions.apply(chinese_word_cut)
+print(len(str['问题标题']))
+
+train = []
+train_item_id = []
+for i in range(len(str["问题标题"])):
+    line = str["问题标题"][i]
+    train.append([w for w in line])
+
+#构建字典
+dictionary = corpora.Dictionary(train)
+print(dictionary.token2id)
+#构建语料库
+corpus = [dictionary.doc2bow(text) for text in train]
+#构建模型
+tfidf_model = models.TfidfModel(corpus, dictionary=dictionary)
+#训练模型
+corpus_tfidf = tfidf_model[corpus]
+
+dictionary.save('train_dictionary.dict')  # 保存生成的词典
+tfidf_model.save('train_tfidf.model')
+corpora.MmCorpus.serialize('train_corpuse.mm', corpus)
+featurenum = len(dictionary.token2id.keys())  # 通过token2id得到特征数
+# 稀疏矩阵相似度，从而建立索引,我们用待检索的文档向量初始化一个相似度计算的对象
+index = similarities.SparseMatrixSimilarity(corpus_tfidf, num_features=featurenum)
+index.save('train_index.index')
+
+
+
+
