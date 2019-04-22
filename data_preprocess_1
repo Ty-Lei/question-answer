@@ -1,0 +1,22 @@
+#数据预处理（一）
+
+#导入相关的库
+import pandas as pd
+import re
+import numpy as np
+
+#读取原始数据
+str=pd.read_table("file_path")
+#str=pd.read_table("D:\\python_file\\yuliaoku\\webtext2019zh\\web_text_zh_valid.json")
+
+matrix=[]
+for i in str.values[0:10000]:
+    f = re.findall(r'[{](.*?)[}]', i[0])
+    k=f[0].split(",")
+    matrix.append(k)
+
+mat_data=np.mat(matrix)
+#print(mat_data.shape)
+train_data_orig = pd.DataFrame(mat_data,columns=["qid","Title","desc","topic","star","Content","answer_id","answerer_tags"])
+#train_data_orig.to_csv('train_data_orig.csv', mode='a', header=False)
+train_data_orig.to_csv('train_data_orig.csv')
