@@ -1,0 +1,37 @@
+#数据预处理（二）
+
+#导入相关的库
+import pandas as pd
+import re
+import numpy as np
+
+#读取第一步预处理的数据
+str=pd.read_csv("valid_data_orig.csv")
+
+str = str.filter(regex='Title|Content')
+#print(str)
+
+questions_list=[]
+for line in str['Title']:
+    k=line.split(":",1)[1]
+    f = re.findall(r'["](.*?)["]', k)[0]
+    questions_list.append(f)
+questions_mat=np.mat(questions_list).transpose()
+
+answer_list=[]
+for line in str['Content']:
+    k=line.split(":",1)[1]
+    f = re.findall(r'["](.*?)["]', k)[0]
+    answer_list.append(f)
+
+answer_mat=np.mat(answer_list).transpose()
+
+QA_mat= np.hstack((questions_mat,answer_mat))
+
+valid_data_QA = pd.DataFrame(QA_mat,columns=["问题标题","问题答案"])
+valid_data_QA.to_csv('valid_data_QA.csv',index=0)
+
+
+
+
+
