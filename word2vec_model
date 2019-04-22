@@ -1,0 +1,56 @@
+from gensim.models import word2vec
+import gensim
+import jieba
+import pandas as pd
+import numpy as np
+
+#定义停用词、标点符号
+stopwords = [line.strip() for line in open('HIT_stopwords.txt', 'r', encoding='utf-8').readlines()]
+
+qaSet=pd.read_csv("valid_data_QA.csv")
+questions=qaSet['问题标题']
+
+sentences = []
+for q in questions:
+    sentences.append(q)
+#print(sentences)
+
+sentences_seg=[]
+for sen in sentences:
+    word=jieba.lcut(sen)
+    sentences_seg.append(word)
+
+tokenized = []
+for sentence in sentences_seg:
+    words = []
+    for word in sentence:
+        if word not in stopwords:
+            words.append(word)
+    tokenized.append(words)
+
+print(len(tokenized))
+model = word2vec.Word2Vec(tokenized, sg=1, size=100,  window=5,  min_count=2,  negative=1, sample=0.001, hs=1, workers=4)
+model.save("w2Vmodel")  #保存模型
+
+model = word2vec.Word2Vec.load("w2Vmodel")   #加载模型
+
+wtvector=[]
+for list in tokenized:
+    #print(list)
+    wtv=np.zeros((100,1))
+    for i in list:
+        #print(i)
+        try:
+            wtv=wtv+np.mat(model[i]).reshape((100,1))
+        except:
+            print(i)
+    wtv=wtv/len(sentences_seg)
+    wtvector.append(wtv)
+print(wtvector)
+
+
+
+
+
+
+
